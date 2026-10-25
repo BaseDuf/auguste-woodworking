@@ -9,6 +9,7 @@ const navLinks = [
 const legalLinks = [
   { href: '/mentions-legales', label: 'Mentions légales' },
   { href: '/cgv', label: 'CGV' },
+  { href: '/politique-de-confidentialite', label: 'Politique de confidentialité' },
 ]
 
 export default function Footer() {

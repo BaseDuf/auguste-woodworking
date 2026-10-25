@@ -16,7 +16,7 @@ export default async function ProductPage({ params }: Props) {
   if (!product) notFound()
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto max-w-6xl px-4 py-16">
       <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
         <PhotoCarousel photos={product.product_photos} />
 
@@ -34,6 +34,6 @@ export default async function ProductPage({ params }: Props) {
           <AddToCartButton product={product} />
         </div>
       </div>
-    </main>
+    </div>
   )
 }

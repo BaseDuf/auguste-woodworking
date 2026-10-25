@@ -8,9 +8,10 @@ export type RealisationWithPhotos = Realisation & { realisation_photos: Realisat
 
 export async function getRealisations(): Promise<RealisationWithPhotos[]> {
   const supabase = createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('realisations')
     .select('*, realisation_photos(*)')
     .order('created_at', { ascending: false })
+  if (error) console.error('[data:realisations] getRealisations', error)
   return (data as RealisationWithPhotos[] | null) ?? []
 }

@@ -33,7 +33,7 @@ export default async function BoutiquePage({
   const products = await getPublishedProducts(category)
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto max-w-6xl px-4 py-16">
       <h1 className="font-serif text-4xl text-stone-800">Boutique</h1>
 
       <nav aria-label="Filtrer par catégorie" className="mt-8 flex flex-wrap gap-3">
@@ -95,6 +95,6 @@ export default async function BoutiquePage({
           })}
         </div>
       )}
-    </main>
+    </div>
   )
 }

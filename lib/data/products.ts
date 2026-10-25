@@ -15,7 +15,8 @@ export async function getPublishedProducts(category?: Category): Promise<Product
     .select('*, product_photos(*)')
     .eq('published', true)
   if (category) query = query.eq('category', category)
-  const { data } = await query.order('created_at', { ascending: false })
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) console.error('[data:products] getPublishedProducts', error)
   return (data as ProductWithPhotos[] | null) ?? []
 }
 
@@ -27,17 +28,21 @@ export async function getProductBySlug(slug: string): Promise<ProductWithPhotos 
     .eq('slug', slug)
     .eq('published', true)
     .single()
-  if (error) return null
-  return (data as ProductWithPhotos | null) ?? null
+  if (error) {
+    if (error.code !== 'PGRST116') console.error('[data:products] getProductBySlug', error)
+    return null
+  }
+  return data as ProductWithPhotos | null
 }
 
 export async function getFeaturedProducts(): Promise<ProductWithPhotos[]> {
   const supabase = createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('products')
     .select('*, product_photos(*)')
     .eq('published', true)
     .order('created_at', { ascending: false })
     .limit(4)
+  if (error) console.error('[data:products] getFeaturedProducts', error)
   return (data as ProductWithPhotos[] | null) ?? []
 }

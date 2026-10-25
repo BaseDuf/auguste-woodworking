@@ -12,7 +12,7 @@ export default async function Home() {
   const featuredRealisations: RealisationWithPhotos[] = realisations.slice(0, 3)
 
   return (
-    <main>
+    <div>
       {/* Hero */}
       <section className="flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-stone-200 px-4 py-24 text-center">
         <h1 className="font-serif text-5xl text-stone-800 md:text-6xl">Auguste Woodworking</h1>
@@ -108,6 +108,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }
