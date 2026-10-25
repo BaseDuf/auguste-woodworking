@@ -104,7 +104,7 @@ Accessible uniquement à Auguste (auth Supabase, rôle `admin`).
 ### 4.2 Produits (`/admin/produits`)
 
 - Liste de tous les produits (nom, prix, stock, statut publié/caché)
-- Créer un produit : nom, slug, description, prix, stock, catégorie, photos (upload), publié
+- Créer un produit : nom, slug, description, prix, stock, catégorie, photos (upload), publié, frais de livraison, commandable hors-stock
 - Modifier / supprimer un produit
 
 ### 4.3 Commandes (`/admin/commandes`)
@@ -125,8 +125,12 @@ Accessible uniquement à Auguste (auth Supabase, rôle `admin`).
 
 ```
 products
-  id, slug, name, description, price_cents, stock, category, published, created_at
+  id, slug, name, description, price_cents, stock, shipping_price_cents, allow_preorder, category, published, created_at
   → photos: product_photos (id, product_id, url, position)
+  
+  Notes :
+  - shipping_price_cents : frais de livraison fixés par Auguste produit par produit
+  - allow_preorder : si true, commandable même à stock = 0
 
 orders
   id, order_number, status, email, phone, created_at, stripe_payment_intent_id
@@ -195,5 +199,6 @@ Ces éléments peuvent être ajoutés en V2.
 ## 10. Questions ouvertes
 
 - **Délai de fabrication :** certains produits sont fabriqués à la commande (stock = 0 mais commandable) ? → à valider avec Auguste. Pour V1 : stock classique, pas de précommande.
-- **Frais de livraison :** forfaitaire ? Calculés selon le poids/zone ? → à décider. Pour V1 : un tarif forfaitaire fixe ajouté au checkout.
+- **Frais de livraison :** forfait fixé par Auguste produit par produit dans l'admin (`shipping_price_cents`). Affiché séparément au checkout.
+- **Précommande :** Auguste active produit par produit (`allow_preorder`). Si activé et stock = 0, le bouton "Ajouter au panier" reste actif avec une mention "Fabriqué à la commande".
 - **Nom de domaine :** déjà acheté ou à acheter ?
