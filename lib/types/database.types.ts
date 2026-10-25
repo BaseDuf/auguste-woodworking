@@ -18,7 +18,7 @@ export interface Database {
           shipping_price_cents: number
           stock: number
           allow_preorder: boolean
-          category: string | null
+          category: 'ameublement' | 'objet' | 'piece_limitee' | null
           published: boolean
           created_at: string
         }
