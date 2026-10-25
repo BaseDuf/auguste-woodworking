@@ -39,8 +39,10 @@ Site vitrine + boutique e-commerce pour Auguste, artisan menuisier. Les clients 
 
 ### 2.4 Panier (`/panier`)
 
-- Liste des produits, quantités, sous-total
+- Liste des produits, quantités (limitées au stock dispo), sous-total
+- Frais de livraison affichés : somme des `shipping_price_cents` de chaque ligne
 - Bouton "Passer commande" → checkout
+- **Stockage :** `localStorage` uniquement (V1) — pas de sync serveur
 
 ### 2.5 Checkout (`/checkout`)
 
@@ -48,13 +50,14 @@ Site vitrine + boutique e-commerce pour Auguste, artisan menuisier. Les clients 
   - Option : "Créer un compte" (checkbox, optionnelle)
 - **Étape 2 — Livraison** : adresse de livraison complète
 - **Étape 3 — Paiement** : Stripe Elements (carte bancaire)
+  - En cas d'échec Stripe : message d'erreur affiché sous le formulaire, le client reste sur l'étape paiement et peut réessayer
 - Récapitulatif de commande visible à droite (desktop) / en bas (mobile)
 - Pas de click & collect — livraison uniquement
 
 ### 2.6 Confirmation de commande (`/commande/confirmation`)
 
-- Numéro de commande, récapitulatif, adresse de livraison
-- Email de confirmation envoyé automatiquement (via Supabase Edge Function + Resend ou SMTP)
+- Numéro de commande (format `AW-AAAA-NNNNN`, ex : `AW-2026-00001`), récapitulatif, adresse de livraison
+- Email de confirmation envoyé automatiquement via **Resend** (déclenché par le webhook Stripe)
 
 ### 2.7 À propos (`/atelier`)
 
@@ -93,7 +96,7 @@ Les commandes passées en invité sont liées à l'email uniquement.
 
 ## 4. Interface admin (`/admin`)
 
-Accessible uniquement à Auguste (auth Supabase, rôle `admin`).
+Accessible uniquement à Auguste via `/admin/login` (email + password). Compte admin créé manuellement une fois en production via le dashboard Supabase. Rôle `admin` assigné via `user_metadata` ou une table `profiles` côté Supabase.
 
 ### 4.1 Dashboard
 
@@ -153,7 +156,8 @@ Auth : Supabase Auth avec rôles — `customer` (optionnel) et `admin` (Auguste)
 
 - **Payment Intents** : créé côté serveur (Next.js API Route / Server Action) au moment du checkout
 - **Stripe Elements** : formulaire carte côté client
-- **Webhook** `payment_intent.succeeded` : confirme la commande en base, envoie l'email de confirmation
+- **Webhook** `payment_intent.succeeded` : confirme la commande en base, **décrémente le stock**, envoie l'email de confirmation via Resend
+- **Webhook** `payment_intent.payment_failed` : marque la commande comme `echouee` en base
 - Pas de Stripe Connect (Auguste = seul vendeur)
 - Devise : EUR
 
@@ -177,7 +181,7 @@ Auth : Supabase Auth avec rôles — `customer` (optionnel) et `admin` (Auguste)
 - **Frontend :** Next.js 14 App Router, hébergé sur Vercel
 - **Base de données + Auth + Storage :** Supabase (photos produits stockées dans Supabase Storage)
 - **Paiement :** Stripe
-- **Emails transactionnels :** Resend (ou Supabase Edge Functions + SMTP)
+- **Emails transactionnels :** Resend (SDK Node.js, appelé depuis les API Routes Next.js au moment du webhook Stripe)
 - **Domaine :** à définir (ex : auguste-woodworking.fr)
 - Variables d'env : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`
 
@@ -196,9 +200,17 @@ Ces éléments peuvent être ajoutés en V2.
 
 ---
 
-## 10. Questions ouvertes
+## 10. Décisions arrêtées
 
-- **Délai de fabrication :** certains produits sont fabriqués à la commande (stock = 0 mais commandable) ? → à valider avec Auguste. Pour V1 : stock classique, pas de précommande.
-- **Frais de livraison :** forfait fixé par Auguste produit par produit dans l'admin (`shipping_price_cents`). Affiché séparément au checkout.
-- **Précommande :** Auguste active produit par produit (`allow_preorder`). Si activé et stock = 0, le bouton "Ajouter au panier" reste actif avec une mention "Fabriqué à la commande".
+- **Frais de livraison multi-produits :** somme des `shipping_price_cents` de chaque ligne du panier
+- **Décrémentation du stock :** au webhook Stripe `payment_intent.succeeded` uniquement
+- **Accès admin :** URL directe `/admin/login`, compte Auguste créé manuellement en production
+- **Erreur paiement :** message d'erreur inline sous le formulaire Stripe, pas de redirection
+- **Panier :** `localStorage` uniquement en V1
+- **Numéro de commande :** format `AW-AAAA-NNNNN`
+- **Email transactionnel :** Resend
+
+## 11. Questions ouvertes
+
 - **Nom de domaine :** déjà acheté ou à acheter ?
+- **Contenu réel :** textes "À propos", photos produits, photos atelier — à fournir par Auguste avant mise en production (on développe avec du contenu placeholder)
