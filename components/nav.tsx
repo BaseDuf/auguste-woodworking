@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import CartIcon from './cart-icon'
 
 const links = [
   { href: '/boutique', label: 'Boutique' },
@@ -45,6 +46,7 @@ export default function Nav() {
             )
           })}
         </ul>
+        <CartIcon />
       </nav>
     </header>
   )

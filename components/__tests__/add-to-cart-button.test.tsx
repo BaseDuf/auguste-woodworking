@@ -1,4 +1,13 @@
 import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
+
+vi.mock('@/lib/cart/cart-context', () => ({
+  useCartContext: () => ({
+    addItem: vi.fn(), removeItem: vi.fn(), updateQty: vi.fn(), clearCart: vi.fn(),
+    items: [], totalItems: 0, subtotalCents: 0, shippingCents: 0, grandTotalCents: 0,
+  }),
+}))
+
 import AddToCartButton from '../add-to-cart-button'
 import type { ProductWithPhotos } from '@/lib/data/products'
 

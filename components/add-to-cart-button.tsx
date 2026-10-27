@@ -1,17 +1,34 @@
 'use client'
 
+import { useState } from 'react'
 import type { ProductWithPhotos } from '@/lib/data/products'
+import { useCartContext } from '@/lib/cart/cart-context'
 
 export default function AddToCartButton({ product }: { product: ProductWithPhotos }) {
+  const { addItem } = useCartContext()
+  const [added, setAdded] = useState(false)
+
   const outOfStock = product.stock === 0
   const preorder = outOfStock && product.allow_preorder
   const disabled = outOfStock && !product.allow_preorder
 
-  const label = disabled ? 'Rupture de stock' : preorder ? 'Précommander' : 'Ajouter au panier'
+  const baseLabel = disabled ? 'Rupture de stock' : preorder ? 'Précommander' : 'Ajouter au panier'
+  const label = added ? 'Ajouté ✓' : baseLabel
 
-  // Placeholder: the real cart is wired in Plan 3.
   const handleClick = () => {
-    console.log('[Cart] Add:', product.id)
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      price_cents: product.price_cents,
+      shipping_price_cents: product.shipping_price_cents,
+      stock: product.stock,
+      allow_preorder: product.allow_preorder,
+      photo_url: product.product_photos?.[0]?.url ?? null,
+      quantity: 1,
+    })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1000)
   }
 
   return (
