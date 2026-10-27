@@ -84,7 +84,7 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
     }
 
     // 7. Insert order_items
-    await supabase.from('order_items').insert(
+    const { error: itemsError } = await supabase.from('order_items').insert(
       data.items.map(item => {
         const product = products.find(p => p.id === item.productId)!
         return {
@@ -95,9 +95,10 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
         }
       })
     )
+    if (itemsError) return { ok: false, error: 'Erreur lors de l\'enregistrement des articles' }
 
     // 8. Insert shipping_addresses
-    await supabase.from('shipping_addresses').insert({
+    const { error: addressError } = await supabase.from('shipping_addresses').insert({
       order_id: order.id,
       line1: data.adresse.line1,
       line2: data.adresse.line2 ?? null,
@@ -105,6 +106,7 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
       postal_code: data.adresse.postalCode,
       country: data.adresse.country,
     })
+    if (addressError) return { ok: false, error: 'Erreur lors de l\'enregistrement de l\'adresse' }
 
     // 9. Return success
     return {
