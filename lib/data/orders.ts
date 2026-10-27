@@ -16,10 +16,7 @@ export type AdminOrder = Pick<
   'id' | 'order_number' | 'email' | 'status' | 'total_cents' | 'shipping_cents' | 'created_at'
 >
 
-export type AdminOrderWithItems = Order & {
-  order_items: (OrderItem & { products: Pick<Product, 'name'> })[]
-  shipping_addresses: ShippingAddress[]
-}
+export type AdminOrderWithItems = OrderWithItems
 
 export async function getOrderByPaymentIntentId(piId: string): Promise<OrderWithItems | null> {
   const supabase = createAdminClient()
