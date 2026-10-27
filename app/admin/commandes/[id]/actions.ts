@@ -2,10 +2,31 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { getOrderById } from '@/lib/data/orders'
 import { sendShippingNotification } from '@/lib/email/send-shipping-notification'
 
+async function requireAdmin(): Promise<{ authorized: boolean }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { authorized: false }
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  return { authorized: profile?.role === 'admin' }
+}
+
 export async function advanceStatus(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const { authorized } = await requireAdmin()
+  if (!authorized) return { ok: false, error: 'Non autorisé' }
+
   const { data: current, error } = await createAdminClient()
     .from('orders')
     .select('status')
@@ -38,14 +59,25 @@ export async function advanceStatus(orderId: string): Promise<{ ok: boolean; err
 }
 
 export async function sendShippingEmail(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const { authorized } = await requireAdmin()
+  if (!authorized) return { ok: false, error: 'Non autorisé' }
+
   const order = await getOrderById(orderId)
 
   if (!order) {
     return { ok: false, error: 'Commande introuvable' }
   }
 
+  if (order.status !== 'confirmee') {
+    return { ok: false, error: 'Statut invalide' }
+  }
+
+  const advance = await advanceStatus(orderId)
+  if (!advance.ok) {
+    return { ok: false, error: advance.error }
+  }
+
   await sendShippingNotification(order)
-  await advanceStatus(orderId)
 
   revalidatePath('/admin/commandes')
   return { ok: true }
