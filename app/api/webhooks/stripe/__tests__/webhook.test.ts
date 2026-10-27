@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const constructEvent = vi.hoisted(() => vi.fn())
+const updateMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/stripe/server', () => ({
   getStripeServer: () => ({
@@ -24,7 +25,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: () => ({
     from: () => ({
       select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { id: 'order-1', status: dbState.orderStatus, email: 'test@example.com', order_items: [], shipping_addresses: [] }, error: null }) }) }),
-      update: () => ({ eq: () => Promise.resolve({ error: dbState.updateError }) }),
+      update: updateMock,
     }),
     rpc: () => Promise.resolve({ error: null }),
   }),
@@ -43,6 +44,7 @@ beforeEach(() => {
   dbState.orderStatus = 'en_attente'
   dbState.updateError = null
   vi.clearAllMocks()
+  updateMock.mockReturnValue({ eq: () => Promise.resolve({ error: dbState.updateError }) })
 })
 
 it('returns 400 on invalid signature', async () => {
@@ -68,7 +70,7 @@ it('is idempotent: skips update if order already confirmed', async () => {
   })
   const res = await POST(makeRequest('{}'))
   expect(res.status).toBe(200)
-  // update should NOT have been called (idempotency guard)
+  expect(updateMock).not.toHaveBeenCalled()
 })
 
 it('marks order echouee on payment_intent.payment_failed', async () => {
