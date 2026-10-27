@@ -2,13 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({ result: { data: null as unknown, error: null as unknown } }))
 
-vi.mock('@/lib/supabase/server', () => {
+vi.mock('@/lib/supabase/admin', () => {
   const chain: Record<string, unknown> = {}
   const self = () => chain
   Object.assign(chain, {
     select: self, eq: self, single: () => Promise.resolve(state.result),
   })
-  return { createClient: () => ({ from: () => chain }) }
+  return { createAdminClient: () => ({ from: () => chain }) }
 })
 
 import { getOrderByPaymentIntentId } from '../orders'

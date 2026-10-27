@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
 
 type Order = Database['public']['Tables']['orders']['Row']
@@ -12,7 +12,7 @@ export type OrderWithItems = Order & {
 }
 
 export async function getOrderByPaymentIntentId(piId: string): Promise<OrderWithItems | null> {
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('orders')

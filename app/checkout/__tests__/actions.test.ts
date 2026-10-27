@@ -18,7 +18,7 @@ const supabaseState = vi.hoisted(() => ({
   insertError: null as unknown,
 }))
 
-vi.mock('@/lib/supabase/server', () => {
+vi.mock('@/lib/supabase/admin', () => {
   const makeChain = (data: unknown) => {
     const chain: Record<string, unknown> = {}
     const self = () => chain
@@ -29,7 +29,7 @@ vi.mock('@/lib/supabase/server', () => {
     return chain
   }
   return {
-    createClient: () => ({
+    createAdminClient: () => ({
       from: (table: string) => {
         if (table === 'products') return makeChain(supabaseState.products)
         return makeChain([])

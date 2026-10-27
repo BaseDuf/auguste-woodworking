@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { getOrderByPaymentIntentId, type OrderWithItems } from '@/lib/data/orders'
 import { formatPrice } from '@/lib/format'
 import { useCartContext } from '@/lib/cart/cart-context'
+import type { OrderWithItems } from '@/lib/data/orders'
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams()
   const paymentIntent = searchParams.get('payment_intent') ?? ''
   const redirectStatus = searchParams.get('redirect_status')
@@ -28,8 +28,10 @@ export default function ConfirmationPage() {
     let cancelled = false
 
     async function loadOrder() {
-      const result = await getOrderByPaymentIntentId(paymentIntent)
+      const res = await fetch(`/api/orders/by-pi?pi=${encodeURIComponent(paymentIntent)}`)
       if (cancelled) return
+
+      const result: OrderWithItems | null = res.ok ? await res.json() : null
 
       if (result) {
         setOrder(result)
@@ -53,33 +55,33 @@ export default function ConfirmationPage() {
 
   if (redirectStatus === 'failed') {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Paiement refusé</h1>
         <p className="mb-8">Votre paiement a été refusé. Veuillez réessayer.</p>
         <Link href="/checkout" className="underline">
           Retourner au paiement
         </Link>
-      </main>
+      </div>
     )
   }
 
   if (loading || (!order && !failed)) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p>Votre commande est en cours de traitement…</p>
-      </main>
+      </div>
     )
   }
 
   if (failed && !order) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Merci pour votre commande !</h1>
         <p>Votre commande est en cours de traitement. Numéro de référence : {paymentIntent}</p>
         <Link href="/boutique" className="mt-8 inline-block underline">
           Retourner à la boutique
         </Link>
-      </main>
+      </div>
     )
   }
 
@@ -88,7 +90,7 @@ export default function ConfirmationPage() {
   const shippingAddress = order.shipping_addresses[0]
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-16">
+    <div className="max-w-2xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-4">Merci pour votre commande !</h1>
 
       <p className="text-lg mb-2">
@@ -122,12 +124,18 @@ export default function ConfirmationPage() {
             ))}
           </tbody>
           <tfoot>
+            <tr className="border-t">
+              <td colSpan={2} className="pt-2 text-right pr-4 text-stone-600">Sous-total</td>
+              <td className="pt-2 text-right text-stone-600">{formatPrice(order.total_cents)}</td>
+            </tr>
             <tr>
-              <td colSpan={2} className="pt-4 font-semibold text-right pr-4">
-                Total TTC
-              </td>
+              <td colSpan={2} className="pt-1 text-right pr-4 text-stone-600">Livraison</td>
+              <td className="pt-1 text-right text-stone-600">{formatPrice(order.shipping_cents)}</td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="pt-4 font-semibold text-right pr-4">Total TTC</td>
               <td className="pt-4 font-semibold text-right">
-                {formatPrice(order.total_cents)}
+                {formatPrice(order.total_cents + order.shipping_cents)}
               </td>
             </tr>
           </tfoot>
@@ -150,6 +158,18 @@ export default function ConfirmationPage() {
       <Link href="/boutique" className="inline-block underline">
         Retourner à la boutique
       </Link>
-    </main>
+    </div>
+  )
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <p>Chargement…</p>
+      </div>
+    }>
+      <ConfirmationContent />
+    </Suspense>
   )
 }

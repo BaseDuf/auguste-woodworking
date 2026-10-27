@@ -112,8 +112,24 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {piError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm mb-4">
-                    {piError}
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">
+                      {piError}
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setStep(2)}
+                        className="px-4 py-2 border border-stone-300 rounded-md text-sm hover:bg-stone-50"
+                      >
+                        Retour
+                      </button>
+                      <Link
+                        href="/panier"
+                        className="px-4 py-2 border border-stone-300 rounded-md text-sm hover:bg-stone-50"
+                      >
+                        Modifier mon panier
+                      </Link>
+                    </div>
                   </div>
                 )}
                 {clientSecret && !loading && (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getStripeServer } from '@/lib/stripe/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderConfirmation } from '@/lib/email/send-order-confirmation'
 
 export async function POST(request: NextRequest) {
@@ -15,36 +15,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent
 
-      // Fetch order
-      const { data: order, error: fetchError } = await supabase
-        .from('orders')
-        .select('*, order_items(*, products(name)), shipping_addresses(*)')
-        .eq('stripe_payment_intent_id', pi.id)
-        .single()
-
-      if (fetchError || !order) {
-        break
-      }
-
-      // Idempotency guard
-      if (order.status !== 'en_attente') {
-        break
-      }
-
-      // Update order status to confirmed
-      await supabase
+      // Atomic idempotency guard: only update if still en_attente or echouee
+      const { data: updated, error: updateError } = await supabase
         .from('orders')
         .update({ status: 'confirmee' })
-        .eq('id', order.id)
+        .eq('stripe_payment_intent_id', pi.id)
+        .in('status', ['en_attente', 'echouee'])
+        .select('*, order_items(*, products(name)), shipping_addresses(*)')
+        .single()
+
+      if (updateError || !updated) {
+        // Already confirmed, or order not found — safe to ack
+        break
+      }
 
       // Decrement stock for each item
-      for (const item of order.order_items ?? []) {
+      for (const item of updated.order_items ?? []) {
         await supabase.rpc('decrement_product_stock', {
           p_product_id: item.product_id,
           p_qty: item.quantity,
@@ -52,17 +44,19 @@ export async function POST(request: NextRequest) {
       }
 
       // Send confirmation email
-      await sendOrderConfirmation(order)
+      await sendOrderConfirmation(updated)
       break
     }
 
     case 'payment_intent.payment_failed': {
       const pi = event.data.object as Stripe.PaymentIntent
 
+      // Only downgrade orders still in en_attente — never downgrade a confirmed order
       await supabase
         .from('orders')
         .update({ status: 'echouee' })
         .eq('stripe_payment_intent_id', pi.id)
+        .eq('status', 'en_attente')
       break
     }
 

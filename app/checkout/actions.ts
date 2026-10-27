@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeServer } from '@/lib/stripe/server'
 
 type CheckoutData = {
@@ -15,13 +15,13 @@ type CreatePIResult =
 
 export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIResult> {
   try {
-    const supabase = createClient()
+    const supabase = createAdminClient()
 
     // 1. Load products from Supabase
     const productIds = data.items.map(i => i.productId)
     const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('id, price_cents, shipping_price_cents, stock, allow_preorder')
+      .select('id, name, price_cents, shipping_price_cents, stock, allow_preorder')
       .in('id', productIds)
 
     if (productsError || !products) {
@@ -30,22 +30,25 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
 
     // 2. Verify each item
     for (const item of data.items) {
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+        return { ok: false, error: 'Quantité invalide' }
+      }
       const product = products.find(p => p.id === item.productId)
       if (!product) {
-        return { ok: false, error: `Produit introuvable: ${item.productId}` }
+        return { ok: false, error: 'Produit introuvable' }
       }
-      if (product.stock === 0 && !product.allow_preorder) {
-        return { ok: false, error: `Stock insuffisant pour ${item.productId}` }
+      if (!product.allow_preorder && item.quantity > product.stock) {
+        return { ok: false, error: `Stock insuffisant pour « ${product.name} »` }
       }
     }
 
-    // 3. Compute totals using server-side prices
+    // 3. Compute totals using server-side prices (shipping once per line, not per unit)
     let totalCents = 0
     let shippingCents = 0
     for (const item of data.items) {
       const product = products.find(p => p.id === item.productId)!
       totalCents += product.price_cents * item.quantity
-      shippingCents += product.shipping_price_cents * item.quantity
+      shippingCents += product.shipping_price_cents
     }
 
     // 4. Generate order number
@@ -71,10 +74,8 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
         stripe_payment_intent_id: pi.id,
         total_cents: totalCents,
         shipping_cents: shippingCents,
-        customer_email: data.coordonnees.email,
-        customer_phone: data.coordonnees.phone,
-        customer_first_name: data.coordonnees.firstName,
-        customer_last_name: data.coordonnees.lastName,
+        email: data.coordonnees.email,
+        phone: data.coordonnees.phone || null,
       })
       .select()
       .single()
@@ -92,6 +93,7 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
           product_id: item.productId,
           quantity: item.quantity,
           unit_price_cents: product.price_cents,
+          shipping_price_cents: product.shipping_price_cents,
         }
       })
     )
@@ -100,6 +102,8 @@ export async function createPaymentIntent(data: CheckoutData): Promise<CreatePIR
     // 8. Insert shipping_addresses
     const { error: addressError } = await supabase.from('shipping_addresses').insert({
       order_id: order.id,
+      first_name: data.coordonnees.firstName,
+      last_name: data.coordonnees.lastName,
       line1: data.adresse.line1,
       line2: data.adresse.line2 ?? null,
       city: data.adresse.city,
