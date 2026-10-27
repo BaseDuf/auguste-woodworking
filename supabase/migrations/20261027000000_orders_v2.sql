@@ -35,3 +35,13 @@ create policy "Anyone can insert order_items"
 drop policy if exists "Anyone can insert shipping_addresses" on public.shipping_addresses;
 create policy "Anyone can insert shipping_addresses"
   on public.shipping_addresses for insert with check (true);
+
+-- Stock decrement helper (called by Stripe webhook on payment_intent.succeeded)
+create or replace function public.decrement_product_stock(p_product_id uuid, p_qty integer)
+returns void language plpgsql security definer as $$
+begin
+  update public.products
+  set stock = greatest(0, stock - p_qty)
+  where id = p_product_id;
+end;
+$$;
