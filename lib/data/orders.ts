@@ -11,6 +11,13 @@ export type OrderWithItems = Order & {
   shipping_addresses: ShippingAddress[]
 }
 
+export type AdminOrder = Pick<
+  Order,
+  'id' | 'order_number' | 'email' | 'status' | 'total_cents' | 'shipping_cents' | 'created_at'
+>
+
+export type AdminOrderWithItems = OrderWithItems
+
 export async function getOrderByPaymentIntentId(piId: string): Promise<OrderWithItems | null> {
   const supabase = createAdminClient()
 
@@ -29,4 +36,44 @@ export async function getOrderByPaymentIntentId(piId: string): Promise<OrderWith
   }
 
   return data as OrderWithItems
+}
+
+export async function getOrders(status?: string): Promise<AdminOrder[]> {
+  const supabase = createAdminClient()
+
+  const base = supabase
+    .from('orders')
+    .select('id, order_number, email, status, total_cents, shipping_cents, created_at')
+    .order('created_at', { ascending: false })
+
+  const { data, error } = status
+    ? await base.eq('status', status as Order['status'])
+    : await base
+
+  if (error) {
+    console.error('[orders] Error fetching orders', error)
+    return []
+  }
+
+  return (data ?? []) as AdminOrder[]
+}
+
+export async function getOrderById(id: string): Promise<AdminOrderWithItems | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*, products(name)), shipping_addresses(*)')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
+    console.error('[orders] Error fetching order by id', error)
+    return null
+  }
+
+  return data as AdminOrderWithItems
 }
