@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getOrderByPaymentIntentId, type OrderWithItems } from '@/lib/data/orders'
@@ -14,8 +14,8 @@ export default function ConfirmationPage() {
 
   const [order, setOrder] = useState<OrderWithItems | null>(null)
   const [loading, setLoading] = useState(true)
-  const [attempts, setAttempts] = useState(0)
   const [failed, setFailed] = useState(false)
+  const attemptsRef = useRef(0)
 
   const { clearCart } = useCartContext()
 
@@ -36,16 +36,13 @@ export default function ConfirmationPage() {
         setLoading(false)
         clearCart()
       } else {
-        setAttempts((prev) => {
-          const next = prev + 1
-          if (next >= 3) {
-            setLoading(false)
-            setFailed(true)
-          } else {
-            setTimeout(loadOrder, 1000)
-          }
-          return next
-        })
+        attemptsRef.current += 1
+        if (attemptsRef.current >= 3) {
+          setLoading(false)
+          setFailed(true)
+        } else {
+          setTimeout(loadOrder, 1000)
+        }
       }
     }
 
