@@ -20,3 +20,14 @@ test('OrderItem references both order and product', () => {
   expect(i.order_id).toBeDefined()
   expect(i.product_id).toBeDefined()
 })
+
+test('Order has total_cents and shipping_cents', () => {
+  const o: Partial<Order> = { total_cents: 6900, shipping_cents: 900 }
+  expect(typeof o.total_cents).toBe('number')
+  expect(typeof o.shipping_cents).toBe('number')
+})
+
+test('OrderItem has shipping_price_cents', () => {
+  const i: Partial<OrderItem> = { shipping_price_cents: 900 }
+  expect(typeof i.shipping_price_cents).toBe('number')
+})
