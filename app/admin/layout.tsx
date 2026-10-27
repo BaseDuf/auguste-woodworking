@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/types/database.types'
@@ -24,5 +25,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/admin/login')
   }
 
-  return <>{children}</>
+  return (
+    <div>
+      <nav className="flex gap-4 p-4 border-b">
+        <Link href="/admin/commandes" className="text-stone-700 hover:text-stone-900">
+          Commandes
+        </Link>
+      </nav>
+      {children}
+    </div>
+  )
 }
