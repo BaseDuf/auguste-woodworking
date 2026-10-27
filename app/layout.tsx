@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, Inter } from 'next/font/google'
+import { Cormorant_Garamond, Inter, Geist } from 'next/font/google'
 import './globals.css'
 import Nav from '@/components/nav'
 import Footer from '@/components/footer'
 import { CartProvider } from '@/lib/cart/cart-context'
+import { cn } from "@/lib/utils";
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -11,10 +12,7 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-serif',
 })
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-})
+const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 export const metadata: Metadata = {
   title: 'Auguste Woodworking',
@@ -27,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="fr" className={cn(cormorant.variable, "font-sans", geist.variable)}>
       <body className="antialiased flex flex-col min-h-screen">
         <CartProvider>
           <Nav />
