@@ -36,19 +36,25 @@ Seule l'admin avance manuellement de `confirmee` vers `expediee` puis `livree`. 
 | `app/admin/commandes/page.tsx` | Liste des commandes (RSC, filtrée par `?status=`) |
 | `app/admin/commandes/[id]/page.tsx` | Détail d'une commande (RSC) |
 | `app/admin/commandes/[id]/actions.ts` | Server Actions : `advanceStatus`, `sendShippingEmail` |
-| `lib/data/admin-orders.ts` | `getOrders(status?)`, `getOrderById(id)` |
-| `lib/email/send-shipping-notification.ts` | Email d'expédition (Resend) |
+| `lib/email/send-shipping-notification.ts` | Email d'expédition — copie de `send-order-confirmation.ts`, sujet/corps différents |
 | `supabase/migrations/20261027000002_orders_rls_admin.sql` | RLS : autoriser UPDATE sur orders pour service_role |
 
-### Fichiers modifiés
+### Fichiers modifiés (extensions de l'existant)
 
 | Chemin | Changement |
 |--------|------------|
+| `lib/data/orders.ts` | Ajouter `getOrders(status?)` et `getOrderById(id)` — même client et même select que `getOrderByPaymentIntentId` déjà présente |
 | `app/admin/layout.tsx` | Ajout d'un lien « Commandes » dans la nav admin |
+
+### Réutilisation explicite
+
+- **`lib/data/orders.ts`** : `getOrderByPaymentIntentId` utilise déjà `createAdminClient()` et le select `*, order_items(*, products(name)), shipping_addresses(*)`. `getOrderById` est identique avec `.eq('id', id)`. `getOrders` ajoute `.order('created_at', { ascending: false })` + filtre optionnel.
+- **`lib/email/send-order-confirmation.ts`** : `sendShippingNotification` copie le stub Resend et le try/catch ; seuls sujet et corps changent.
+- **Tests** : le mock `createAdminClient` de `lib/data/__tests__/orders.test.ts` et de `app/api/webhooks/stripe/__tests__/webhook.test.ts` sont réutilisés comme base pour les nouveaux tests.
 
 ---
 
-## Data layer — `lib/data/admin-orders.ts`
+## Data layer — extensions de `lib/data/orders.ts`
 
 ```ts
 export type AdminOrder = Pick<Order, 'id' | 'order_number' | 'email' | 'phone' | 'status' | 'total_cents' | 'shipping_cents' | 'created_at'>
@@ -159,7 +165,7 @@ create policy if not exists "service_role can update orders"
 
 | Fichier | Ce qu'il teste |
 |---------|---------------|
-| `lib/data/__tests__/admin-orders.test.ts` | `getOrders` (avec et sans filtre), `getOrderById` (trouvé / not found) |
+| `lib/data/__tests__/orders.test.ts` | Étendre : ajouter tests `getOrders` (avec et sans filtre) et `getOrderById` (trouvé / not found) |
 | `lib/email/__tests__/send-shipping-notification.test.ts` | Stub quand pas de clé, appel Resend quand clé présente |
 | `app/admin/commandes/__tests__/actions.test.ts` | `advanceStatus` (transitions valides, double-clic), `sendShippingEmail` (appelle email + avance statut) |
 | `app/admin/commandes/__tests__/list.test.tsx` | Rendu de la liste, filtre actif dans l'URL |
