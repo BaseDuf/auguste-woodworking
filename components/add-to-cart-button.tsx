@@ -16,17 +16,7 @@ export default function AddToCartButton({ product }: { product: ProductWithPhoto
   const label = added ? 'Ajouté ✓' : baseLabel
 
   const handleClick = () => {
-    addItem({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      price_cents: product.price_cents,
-      shipping_price_cents: product.shipping_price_cents,
-      stock: product.stock,
-      allow_preorder: product.allow_preorder,
-      photo_url: product.product_photos?.[0]?.url ?? null,
-      quantity: 1,
-    })
+    addItem(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1000)
   }
