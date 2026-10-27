@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
 export interface OrderForEmailItem {
-  product: { name: string }
+  products: { name: string }
   quantity: number
   unit_price_cents: number
 }
@@ -39,7 +39,7 @@ export async function sendOrderConfirmation(order: OrderForEmail): Promise<void>
     : 'Adresse non disponible'
 
   const itemsText = order.order_items
-    .map(item => `- ${item.product.name} x${item.quantity} — ${(item.unit_price_cents / 100).toFixed(2)} €`)
+    .map(item => `- ${item.products.name} x${item.quantity} — ${(item.unit_price_cents / 100).toFixed(2)} €`)
     .join('\n')
 
   const totalText = order.total_cents != null

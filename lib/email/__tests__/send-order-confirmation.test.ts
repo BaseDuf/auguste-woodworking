@@ -4,7 +4,7 @@ afterEach(() => { vi.unstubAllEnvs() })
 
 const mockOrder = {
   id: 'order-1', order_number: 'AW-2026-00001', email: 'test@example.com',
-  order_items: [{ product: { name: 'Table' }, quantity: 1, unit_price_cents: 50000 }],
+  order_items: [{ products: { name: 'Table' }, quantity: 1, unit_price_cents: 50000 }],
   shipping_addresses: [{ first_name: 'Jean', last_name: 'Dupont', line1: '1 rue de la Paix', city: 'Paris', postal_code: '75001', country: 'FR', line2: null }],
 }
 
