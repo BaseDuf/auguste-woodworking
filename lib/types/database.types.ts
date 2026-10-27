@@ -39,13 +39,15 @@ export interface Database {
           phone: string | null
           customer_id: string | null
           stripe_payment_intent_id: string | null
+          total_cents: number
+          shipping_cents: number
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at'> & { id?: string }
         Update: Partial<Database['public']['Tables']['orders']['Insert']>
       }
       order_items: {
-        Row: { id: string; order_id: string; product_id: string; quantity: number; unit_price_cents: number }
+        Row: { id: string; order_id: string; product_id: string; quantity: number; unit_price_cents: number; shipping_price_cents: number }
         Insert: Omit<Database['public']['Tables']['order_items']['Row'], 'id'> & { id?: string }
         Update: Partial<Database['public']['Tables']['order_items']['Insert']>
       }
