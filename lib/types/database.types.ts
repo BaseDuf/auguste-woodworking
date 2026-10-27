@@ -77,5 +77,11 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['realisation_photos']['Insert']>
       }
     }
+    Functions: {
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+    }
   }
 }
