@@ -12,6 +12,7 @@ vi.mock('@/lib/data/products', () => ({ getAdminProductById: mockGetAdminProduct
 
 // createAdminClient mock configurable — supporte: products insert/update/select, product_photos insert/delete/select
 const mockStorageRemove = vi.hoisted(() => vi.fn().mockResolvedValue({}))
+const mockPhotoUpdate = vi.hoisted(() => vi.fn())
 
 const mockAdminDb = vi.hoisted(() => ({
   insertResult: { data: { id: 'p-new' }, error: null as { code: string } | null },
@@ -19,6 +20,7 @@ const mockAdminDb = vi.hoisted(() => ({
   updateSelectData: [{ id: 'mock' }] as object[],
   photosData: [] as { id: string; position: number }[],
   photoInsertError: null as { code: string } | null,
+  photoUpdateErrors: [] as (null | object)[],
 }))
 
 vi.mock('@/lib/supabase/admin', () => ({
@@ -29,11 +31,13 @@ vi.mock('@/lib/supabase/admin', () => ({
           insert: () => ({ select: () => ({ single: () => Promise.resolve(mockAdminDb.insertResult) }) }),
           update: () => ({
             eq: () => {
-              const basePromise = Promise.resolve(mockAdminDb.updateResult) as any
-              basePromise.select = () => Promise.resolve({
+              const selectResult = () => Promise.resolve({
                 data: mockAdminDb.updateResult.error ? null : mockAdminDb.updateSelectData,
                 error: mockAdminDb.updateResult.error,
               })
+              const basePromise = Promise.resolve(mockAdminDb.updateResult) as any
+              basePromise.select = selectResult
+              basePromise.eq = () => ({ select: selectResult })
               return basePromise
             },
           }),
@@ -50,7 +54,13 @@ vi.mock('@/lib/supabase/admin', () => ({
         insert: () => Promise.resolve({ error: mockAdminDb.photoInsertError }),
         delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
         upsert: () => Promise.resolve({ error: null }),
-        update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+        update: (data: Record<string, unknown>) => ({
+          eq: (field: string, val: unknown) => {
+            mockPhotoUpdate(data, field, val)
+            const err = mockAdminDb.photoUpdateErrors.length > 0 ? mockAdminDb.photoUpdateErrors.shift()! : null
+            return Promise.resolve({ error: err })
+          },
+        }),
       }
     },
     storage: {
@@ -183,6 +193,13 @@ describe('unpublishProduct', () => {
     expect(result.ok).toBe(false)
     expect(result.error).toBeDefined()
   })
+
+  it('returns ok:false for already-unpublished product (published filter returns no rows)', async () => {
+    mockAdminDb.updateSelectData = []
+    const result = await unpublishProduct('p1')
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('Produit déjà dépublié ou introuvable')
+  })
 })
 
 describe('uploadPhoto', () => {
@@ -226,6 +243,8 @@ describe('deletePhoto', () => {
 describe('reorderPhoto', () => {
   beforeEach(() => {
     mockAuthUser.value = { id: 'u1' }
+    mockPhotoUpdate.mockClear()
+    mockAdminDb.photoUpdateErrors = []
     mockAdminDb.photosData = [
       { id: 'ph1', position: 0 },
       { id: 'ph2', position: 1 },
@@ -236,6 +255,19 @@ describe('reorderPhoto', () => {
   it('swaps positions moving up', async () => {
     const result = await reorderPhoto('ph2', 'p1', 'up')
     expect(result).toEqual({ ok: true })
+    // ph2 (index 1) moves up: gets ph1's position (0); ph1 gets ph2's old position (1)
+    expect(mockPhotoUpdate).toHaveBeenNthCalledWith(1, { position: 0 }, 'id', 'ph2')
+    expect(mockPhotoUpdate).toHaveBeenNthCalledWith(2, { position: 1 }, 'id', 'ph1')
+  })
+
+  it('rolls back first update when second update fails', async () => {
+    mockAdminDb.photoUpdateErrors = [null, { message: 'DB error' }]
+    const result = await reorderPhoto('ph2', 'p1', 'up')
+    expect(result.ok).toBe(false)
+    // Called 3 times: first update, second (failed), rollback
+    expect(mockPhotoUpdate).toHaveBeenCalledTimes(3)
+    // Rollback restores ph2 to its original position (1)
+    expect(mockPhotoUpdate).toHaveBeenNthCalledWith(3, { position: 1 }, 'id', 'ph2')
   })
 
   it('returns error when photoId not in list (Review Focus #1)', async () => {

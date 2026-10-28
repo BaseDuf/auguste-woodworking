@@ -130,6 +130,7 @@ export async function unpublishProduct(
     .from('products')
     .update({ published: false })
     .eq('id', productId)
+    .eq('published', true)
     .select()
 
   if (error) {
@@ -137,7 +138,7 @@ export async function unpublishProduct(
   }
 
   if (!data || data.length === 0) {
-    return { ok: false, error: 'Produit introuvable' }
+    return { ok: false, error: 'Produit déjà dépublié ou introuvable' }
   }
 
   revalidatePath('/admin/produits')
@@ -237,6 +238,7 @@ export async function reorderPhoto(
   const neighborIdx = direction === 'up' ? index - 1 : index + 1
 
   // Swap positions
+  const currentPos = photos[index].position
   const newPosA = photos[neighborIdx].position
   const newPosB = photos[index].position
 
@@ -244,7 +246,11 @@ export async function reorderPhoto(
   if (err1) return { ok: false, error: 'Impossible de déplacer' }
 
   const { error: err2 } = await createAdminClient().from('product_photos').update({ position: newPosB }).eq('id', photos[neighborIdx].id)
-  if (err2) return { ok: false, error: 'Impossible de déplacer' }
+  if (err2) {
+    // Roll back the first update
+    await createAdminClient().from('product_photos').update({ position: currentPos }).eq('id', photoId)
+    return { ok: false, error: 'Impossible de déplacer' }
+  }
 
   revalidatePath(`/admin/produits/${productId}/edit`)
   return { ok: true }

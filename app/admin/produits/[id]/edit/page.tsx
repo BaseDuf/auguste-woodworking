@@ -54,6 +54,7 @@ export default async function EditProduitPage({
               `/admin/produits/${params.id}/edit?error=${encodeURIComponent(result.error ?? 'Erreur lors de la mise à jour')}`
             )
           }
+          redirect(`/admin/produits/${params.id}/edit`)
         }}
         className="space-y-5"
       >
@@ -218,7 +219,9 @@ export default async function EditProduitPage({
                   <form
                     action={async () => {
                       'use server'
-                      await reorderPhoto(photo.id, product.id, 'up')
+                      const r = await reorderPhoto(photo.id, product.id, 'up')
+                      if (!r.ok) redirect(`/admin/produits/${product.id}/edit?error=${encodeURIComponent(r.error ?? 'Erreur')}`)
+                      redirect(`/admin/produits/${product.id}/edit`)
                     }}
                   >
                     <button
@@ -233,7 +236,9 @@ export default async function EditProduitPage({
                   <form
                     action={async () => {
                       'use server'
-                      await reorderPhoto(photo.id, product.id, 'down')
+                      const r = await reorderPhoto(photo.id, product.id, 'down')
+                      if (!r.ok) redirect(`/admin/produits/${product.id}/edit?error=${encodeURIComponent(r.error ?? 'Erreur')}`)
+                      redirect(`/admin/produits/${product.id}/edit`)
                     }}
                   >
                     <button
@@ -249,7 +254,9 @@ export default async function EditProduitPage({
               <form
                 action={async () => {
                   'use server'
-                  await deletePhoto(photo.id, product.id)
+                  const r = await deletePhoto(photo.id, product.id)
+                  if (!r.ok) redirect(`/admin/produits/${product.id}/edit?error=${encodeURIComponent(r.error ?? 'Erreur')}`)
+                  redirect(`/admin/produits/${product.id}/edit`)
                 }}
               >
                 <button
@@ -267,7 +274,9 @@ export default async function EditProduitPage({
         <form
           action={async (fd) => {
             'use server'
-            await uploadPhoto(product.id, fd)
+            const r = await uploadPhoto(product.id, fd)
+            if (!r.ok) redirect(`/admin/produits/${product.id}/edit?error=${encodeURIComponent(r.error ?? 'Erreur')}`)
+            redirect(`/admin/produits/${product.id}/edit`)
           }}
           className="flex items-center gap-3"
         >
@@ -293,7 +302,9 @@ export default async function EditProduitPage({
           <form
             action={async () => {
               'use server'
-              await unpublishProduct(product.id)
+              const r = await unpublishProduct(product.id)
+              if (!r.ok) redirect(`/admin/produits/${product.id}/edit?error=${encodeURIComponent(r.error ?? 'Erreur')}`)
+              redirect(`/admin/produits/${product.id}/edit`)
             }}
           >
             <button

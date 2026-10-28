@@ -15,14 +15,14 @@ export async function uploadProductPhoto(
   file: File
 ): Promise<{ path: string; url: string }> {
   if (file.size === 0) {
-    throw new Error('File is empty')
+    throw new Error('Fichier vide')
   }
   if (file.size > MAX_SIZE_BYTES) {
-    throw new Error('File too large')
+    throw new Error('Fichier trop volumineux (10 Mo max)')
   }
   const extension = ALLOWED_MIME[file.type]
   if (!extension) {
-    throw new Error('Unsupported file type')
+    throw new Error('Format non supporté (JPEG, PNG, WebP, AVIF)')
   }
 
   const path = `${productId}/${crypto.randomUUID()}.${extension}`
@@ -33,7 +33,7 @@ export async function uploadProductPhoto(
     upsert: false,
   })
   if (error) {
-    throw error
+    throw new Error("Erreur lors de l'upload")
   }
 
   const { data } = storage.getPublicUrl(path)
