@@ -110,9 +110,10 @@ Après succès : `revalidatePath('/admin/produits')` + `revalidatePath(\`/admin/
 ### `uploadPhoto(productId: string, formData: FormData): Promise<{ ok: boolean; error?: string }>`
 
 1. `const file = formData.get('file') as File`
-2. `uploadProductPhoto(productId, file)` → `url`
+2. `uploadProductPhoto(productId, file)` → `{ path, url }`
 3. `position` = MAX(position) existant + 1 (query `select max(position) from product_photos where product_id = productId`)
 4. `createAdminClient().from('product_photos').insert({ product_id: productId, url, position })`
+   - Si INSERT échoue → rollback Storage : `createAdminClient().storage.from('product-photos').remove([path])`
 5. `revalidatePath(\`/admin/produits/${productId}/edit\`)`
 
 ### `deletePhoto(photoId: string, productId: string): Promise<{ ok: boolean; error?: string }>`
@@ -138,13 +139,19 @@ Retourne `{ ok: false, error: 'Impossible de déplacer' }` si déjà en premièr
 ## Storage — `lib/storage/upload-product-photo.ts`
 
 ```ts
-export async function uploadProductPhoto(productId: string, file: File): Promise<{ url: string }>
+export async function uploadProductPhoto(
+  productId: string,
+  file: File
+): Promise<{ path: string; url: string }>
 ```
 
-- Chemin : `${productId}/${Date.now()}.${ext}` (ext depuis `file.name`)
-- `createAdminClient().storage.from('product-photos').upload(path, file)`
-- `createAdminClient().storage.from('product-photos').getPublicUrl(path)` → retourne `data.publicUrl`
+- Valider MIME type (acceptés : `image/jpeg`, `image/png`, `image/webp`, `image/avif`) — lancer si non supporté
+- Valider taille ≤ 10 MB — lancer si dépassée
+- Chemin : `${productId}/${crypto.randomUUID()}.${ext}` (ext déduit du MIME type, pas du nom de fichier)
+- `createAdminClient().storage.from('product-photos').upload(path, file, { contentType: file.type, upsert: false })`
+- `createAdminClient().storage.from('product-photos').getPublicUrl(path)` → retourne `{ path, url: data.publicUrl }`
 - Lance si erreur Storage
+- Retourne `path` en plus de `url` pour permettre le rollback Storage si l'INSERT DB échoue
 
 ---
 
