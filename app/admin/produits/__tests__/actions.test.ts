@@ -11,9 +11,12 @@ vi.mock('@/lib/storage/upload-product-photo', () => ({ uploadProductPhoto: mockU
 vi.mock('@/lib/data/products', () => ({ getAdminProductById: mockGetAdminProductById }))
 
 // createAdminClient mock configurable — supporte: products insert/update/select, product_photos insert/delete/select
+const mockStorageRemove = vi.hoisted(() => vi.fn().mockResolvedValue({}))
+
 const mockAdminDb = vi.hoisted(() => ({
   insertResult: { data: { id: 'p-new' }, error: null as { code: string } | null },
   updateResult: { error: null as { code: string } | null },
+  updateSelectData: [{ id: 'mock' }] as object[],
   photosData: [] as { id: string; position: number }[],
   photoInsertError: null as { code: string } | null,
 }))
@@ -24,7 +27,16 @@ vi.mock('@/lib/supabase/admin', () => ({
       if (table === 'products') {
         return {
           insert: () => ({ select: () => ({ single: () => Promise.resolve(mockAdminDb.insertResult) }) }),
-          update: () => ({ eq: () => Promise.resolve(mockAdminDb.updateResult) }),
+          update: () => ({
+            eq: () => {
+              const basePromise = Promise.resolve(mockAdminDb.updateResult) as any
+              basePromise.select = () => Promise.resolve({
+                data: mockAdminDb.updateResult.error ? null : mockAdminDb.updateSelectData,
+                error: mockAdminDb.updateResult.error,
+              })
+              return basePromise
+            },
+          }),
         }
       }
       // product_photos
@@ -42,7 +54,7 @@ vi.mock('@/lib/supabase/admin', () => ({
       }
     },
     storage: {
-      from: () => ({ remove: vi.fn().mockResolvedValue({}) }),
+      from: () => ({ remove: mockStorageRemove }),
     },
   }),
 }))
@@ -153,12 +165,23 @@ describe('updateProduct', () => {
 })
 
 describe('unpublishProduct', () => {
-  beforeEach(() => { mockAuthUser.value = { id: 'u1' }; mockAdminDb.updateResult = { error: null } })
+  beforeEach(() => {
+    mockAuthUser.value = { id: 'u1' }
+    mockAdminDb.updateResult = { error: null }
+    mockAdminDb.updateSelectData = [{ id: 'p1' }]
+  })
 
   it('returns ok:true and revalidates', async () => {
     const result = await unpublishProduct('p1')
     expect(result).toEqual({ ok: true })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/produits')
+  })
+
+  it('returns ok:false when product does not exist (no rows affected)', async () => {
+    mockAdminDb.updateSelectData = []
+    const result = await unpublishProduct('nonexistent')
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeDefined()
   })
 })
 
@@ -181,13 +204,12 @@ describe('uploadPhoto', () => {
 
   it('removes uploaded Storage file if DB insert fails', async () => {
     mockAdminDb.photoInsertError = { code: '23503' }
-    const removeMock = vi.fn().mockResolvedValue({})
-    // Patch the storage mock for this test
-    // (test verifies rollback is triggered — details in implementation)
+    mockStorageRemove.mockReset()
     const fd = new FormData()
     fd.append('file', new Blob(['x'], { type: 'image/jpeg' }) as File)
     const result = await uploadPhoto('p1', fd)
     expect(result.ok).toBe(false)
+    expect(mockStorageRemove).toHaveBeenCalledWith(['p1/uuid.jpg'])
   })
 })
 

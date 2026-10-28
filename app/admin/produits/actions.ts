@@ -126,13 +126,18 @@ export async function unpublishProduct(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin()
 
-  const { error } = await createAdminClient()
+  const { data, error } = await createAdminClient()
     .from('products')
     .update({ published: false })
     .eq('id', productId)
+    .select()
 
   if (error) {
     return { ok: false, error: 'Erreur lors de la dépublication' }
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, error: 'Produit introuvable' }
   }
 
   revalidatePath('/admin/produits')
@@ -235,8 +240,11 @@ export async function reorderPhoto(
   const newPosA = photos[neighborIdx].position
   const newPosB = photos[index].position
 
-  await createAdminClient().from('product_photos').update({ position: newPosA }).eq('id', photos[index].id)
-  await createAdminClient().from('product_photos').update({ position: newPosB }).eq('id', photos[neighborIdx].id)
+  const { error: err1 } = await createAdminClient().from('product_photos').update({ position: newPosA }).eq('id', photos[index].id)
+  if (err1) return { ok: false, error: 'Impossible de déplacer' }
+
+  const { error: err2 } = await createAdminClient().from('product_photos').update({ position: newPosB }).eq('id', photos[neighborIdx].id)
+  if (err2) return { ok: false, error: 'Impossible de déplacer' }
 
   revalidatePath(`/admin/produits/${productId}/edit`)
   return { ok: true }
