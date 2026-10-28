@@ -25,16 +25,27 @@ describe('uploadProductPhoto', () => {
   })
 
   it('throws when MIME type is not allowed', async () => {
-    await expect(uploadProductPhoto('p1', makeFile('image/gif', 100))).rejects.toThrow()
+    await expect(uploadProductPhoto('p1', makeFile('image/gif', 100))).rejects.toThrow(
+      'Format non supporté (JPEG, PNG, WebP, AVIF)'
+    )
   })
 
   it('throws when file size is 0', async () => {
     // Review Focus #2
-    await expect(uploadProductPhoto('p1', makeFile('image/jpeg', 0))).rejects.toThrow()
+    await expect(uploadProductPhoto('p1', makeFile('image/jpeg', 0))).rejects.toThrow('Fichier vide')
   })
 
   it('throws when file size exceeds 10 MB', async () => {
-    await expect(uploadProductPhoto('p1', makeFile('image/jpeg', 11 * 1024 * 1024))).rejects.toThrow()
+    await expect(uploadProductPhoto('p1', makeFile('image/jpeg', 11 * 1024 * 1024))).rejects.toThrow(
+      'Fichier trop volumineux (10 Mo max)'
+    )
+  })
+
+  it('throws when storage upload fails', async () => {
+    mockUpload.mockResolvedValue({ data: null, error: new Error('storage fail') })
+    await expect(uploadProductPhoto('p1', makeFile('image/jpeg', 500))).rejects.toThrow(
+      "Erreur lors de l'upload"
+    )
   })
 
   it('returns path and url on successful upload', async () => {
