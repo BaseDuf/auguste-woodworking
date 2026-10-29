@@ -3,15 +3,15 @@ import Link from 'next/link'
 const sections = [
   {
     title: "L'histoire d'Auguste",
-    body: "Menuisier de formation, Auguste a obtenu son CAP menuiserie avant de travailler plusieurs années dans une entreprise du métier. Fort de cette expérience, il a décidé de se lancer à son compte et d'ouvrir son atelier dans la vallée de la Sioule, en Allier. Depuis, il intervient sur des chantiers en Allier comme à Paris, au gré des projets qui lui sont confiés.",
+    body: "Menuisier de formation, j'ai obtenu mon CAP avant de passer plusieurs années dans une entreprise du bâtiment — le temps d'apprendre le métier sur le terrain. Il y a quelques années, j'ai décidé de me lancer à mon compte et d'ouvrir mon atelier dans la vallée de la Sioule, en Allier. Depuis, j'interviens sur des chantiers en Allier, mais aussi jusqu'à Paris.",
   },
   {
     title: 'La démarche',
-    body: "Auguste travaille avant tout pour des chantiers : aménagements intérieurs, mobilier sur mesure intégré, menuiseries. Chaque projet est pensé en dialogue avec le client, de la conception à la pose. Si vous avez un chantier en tête — une pièce à aménager, un meuble à créer, une rénovation à mener — c'est la bonne adresse.",
+    body: "Je travaille avant tout pour des chantiers : aménagements intérieurs, menuiseries, mobilier intégré sur mesure. Chaque projet commence par un échange — pour comprendre l'espace, les usages, les envies — et se termine par une pose soignée. Si vous avez un chantier en tête, une pièce à transformer ou un aménagement à réaliser, n'hésitez pas à me contacter.",
   },
   {
     title: 'Les matériaux',
-    body: "Auguste travaille avec tous types de bois, avec une préférence marquée pour les essences brutes aux caractères affirmés : chêne, merisier, noyer... Des bois choisis pour leur beauté naturelle, leur solidité et le vieillissement qu'ils offrent dans le temps.",
+    body: "Je travaille avec toutes les essences de bois, avec une préférence pour les bois bruts aux caractères marqués : chêne, merisier, noyer... Des matières que je choisis pour leur beauté naturelle, leur solidité et le vieillissement qu'elles offrent sur le long terme.",
   },
 ]
 
