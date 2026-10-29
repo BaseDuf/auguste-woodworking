@@ -3,15 +3,15 @@ import Link from 'next/link'
 const sections = [
   {
     title: "L'histoire d'Auguste",
-    body: 'Texte à venir.',
+    body: "Menuisier de formation, Auguste a obtenu son CAP menuiserie avant de travailler plusieurs années dans une entreprise du métier. Fort de cette expérience, il a décidé de se lancer à son compte et d'ouvrir son atelier dans la vallée de la Sioule, en Allier. Depuis, il intervient sur des chantiers en Allier comme à Paris, au gré des projets qui lui sont confiés.",
   },
   {
     title: 'La démarche',
-    body: 'Texte à venir.',
+    body: "Auguste travaille avant tout pour des chantiers : aménagements intérieurs, mobilier sur mesure intégré, menuiseries. Chaque projet est pensé en dialogue avec le client, de la conception à la pose. Si vous avez un chantier en tête — une pièce à aménager, un meuble à créer, une rénovation à mener — c'est la bonne adresse.",
   },
   {
     title: 'Les matériaux',
-    body: 'Texte à venir.',
+    body: "Auguste travaille avec tous types de bois, avec une préférence marquée pour les essences brutes aux caractères affirmés : chêne, merisier, noyer... Des bois choisis pour leur beauté naturelle, leur solidité et le vieillissement qu'ils offrent dans le temps.",
   },
 ]
 
