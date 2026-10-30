@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getAdminRealisations } from '@/lib/data/realisations'
 import { deleteRealisation } from '@/app/admin/realisations/actions'
 import {
@@ -10,7 +11,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export default async function RealisationsPage() {
+export default async function RealisationsPage({
+  searchParams,
+}: {
+  searchParams: { error?: string }
+}) {
   const realisations = await getAdminRealisations()
 
   return (
@@ -24,6 +29,12 @@ export default async function RealisationsPage() {
           Nouvelle réalisation
         </Link>
       </div>
+
+      {searchParams.error && (
+        <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {searchParams.error}
+        </div>
+      )}
 
       <Table>
         <TableHeader>
@@ -50,7 +61,7 @@ export default async function RealisationsPage() {
                       className="h-10 w-10 rounded object-cover"
                     />
                   ) : (
-                    <div className="h-10 w-10 rounded bg-stone-200" />
+                    <div className="h-10 w-10 rounded bg-stone-100" />
                   )}
                 </TableCell>
                 <TableCell className="font-medium text-stone-900">
@@ -72,7 +83,10 @@ export default async function RealisationsPage() {
                   <form
                     action={async () => {
                       'use server'
-                      await deleteRealisation(realisation.id)
+                      const r = await deleteRealisation(realisation.id)
+                      if (!r.ok)
+                        redirect(`/admin/realisations?error=${encodeURIComponent(r.error ?? 'Erreur lors de la suppression')}`)
+                      redirect('/admin/realisations')
                     }}
                   >
                     <button
