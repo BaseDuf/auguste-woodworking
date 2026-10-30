@@ -71,7 +71,9 @@ export async function deleteRealisation(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin()
 
-  const { data: photos, error: fetchError } = await createAdminClient()
+  const supabase = createAdminClient()
+
+  const { data: photos, error: fetchError } = await supabase
     .from('realisation_photos')
     .select('id, url')
     .eq('realisation_id', id)
@@ -88,10 +90,10 @@ export async function deleteRealisation(
     .filter((p): p is string => Boolean(p))
 
   if (paths.length > 0) {
-    await createAdminClient().storage.from('realisation-photos').remove(paths)
+    await supabase.storage.from('realisation-photos').remove(paths)
   }
 
-  const { error: deleteError } = await createAdminClient()
+  const { error: deleteError } = await supabase
     .from('realisations')
     .delete()
     .eq('id', id)
@@ -111,6 +113,7 @@ export async function uploadPhoto(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin()
 
+  const supabase = createAdminClient()
   const file = formData.get('file') as File
 
   let uploadResult: { path: string; url: string }
@@ -122,7 +125,7 @@ export async function uploadPhoto(
 
   const { path, url } = uploadResult
 
-  const { data: lastPhotos } = await createAdminClient()
+  const { data: lastPhotos } = await supabase
     .from('realisation_photos')
     .select('position')
     .eq('realisation_id', realisationId)
@@ -131,15 +134,17 @@ export async function uploadPhoto(
 
   const position = ((lastPhotos as { position: number }[] | null)?.[0]?.position ?? -1) + 1
 
-  const { error: insertError } = await createAdminClient()
+  const { error: insertError } = await supabase
     .from('realisation_photos')
     .insert({ realisation_id: realisationId, url, position })
 
   if (insertError) {
-    await createAdminClient().storage.from('realisation-photos').remove([path])
+    await supabase.storage.from('realisation-photos').remove([path])
     return { ok: false, error: "Erreur lors de l'enregistrement de la photo" }
   }
 
+  revalidatePath('/realisations')
+  revalidatePath('/admin/realisations')
   revalidatePath('/admin/realisations/' + realisationId + '/edit')
   return { ok: true }
 }
@@ -150,7 +155,24 @@ export async function deletePhoto(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin()
 
-  const { error } = await createAdminClient()
+  const supabase = createAdminClient()
+
+  const { data: photo, error: fetchError } = await supabase
+    .from('realisation_photos')
+    .select('id, url')
+    .eq('id', photoId)
+    .single()
+
+  if (fetchError || !photo) {
+    return { ok: false, error: 'Erreur lors de la suppression' }
+  }
+
+  const segment = new URL(photo.url).pathname.split('/realisation-photos/')[1]
+  if (segment) {
+    await supabase.storage.from('realisation-photos').remove([segment])
+  }
+
+  const { error } = await supabase
     .from('realisation_photos')
     .delete()
     .eq('id', photoId)
@@ -159,6 +181,8 @@ export async function deletePhoto(
     return { ok: false, error: 'Erreur lors de la suppression' }
   }
 
+  revalidatePath('/realisations')
+  revalidatePath('/admin/realisations')
   revalidatePath('/admin/realisations/' + realisationId + '/edit')
   return { ok: true }
 }
