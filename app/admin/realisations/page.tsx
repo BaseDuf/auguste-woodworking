@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAdminRealisations } from '@/lib/data/realisations'
 import { deleteRealisation } from '@/app/admin/realisations/actions'
+import { ConfirmSubmitButton } from '@/components/admin/confirm-submit-button'
 import {
   Table,
   TableBody,
@@ -89,12 +90,12 @@ export default async function RealisationsPage({
                       redirect('/admin/realisations')
                     }}
                   >
-                    <button
-                      type="submit"
+                    <ConfirmSubmitButton
+                      message="Supprimer cette réalisation et toutes ses photos ?"
                       className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
                     >
                       Supprimer
-                    </button>
+                    </ConfirmSubmitButton>
                   </form>
                 </TableCell>
               </TableRow>

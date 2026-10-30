@@ -7,6 +7,7 @@ import {
   uploadPhoto,
   deletePhoto,
 } from '@/app/admin/realisations/actions'
+import { ConfirmSubmitButton } from '@/components/admin/confirm-submit-button'
 
 export default async function EditRealisationPage({
   params,
@@ -111,12 +112,12 @@ export default async function EditRealisationPage({
                   redirect(`/admin/realisations/${params.id}/edit`)
                 }}
               >
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  message="Supprimer cette photo ?"
                   className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
                 >
                   Supprimer
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </div>
           ))}
@@ -165,12 +166,12 @@ export default async function EditRealisationPage({
             redirect('/admin/realisations')
           }}
         >
-          <button
-            type="submit"
+          <ConfirmSubmitButton
+            message="Supprimer cette réalisation et toutes ses photos ? Cette action est irréversible."
             className="rounded border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
           >
             Supprimer la réalisation
-          </button>
+          </ConfirmSubmitButton>
         </form>
       </section>
     </div>

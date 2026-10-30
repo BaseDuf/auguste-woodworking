@@ -12,6 +12,7 @@ export async function getRealisations(): Promise<RealisationWithPhotos[]> {
     .from('realisations')
     .select('*, realisation_photos(*)')
     .order('created_at', { ascending: false })
+    .order('position', { ascending: true, referencedTable: 'realisation_photos' })
   if (error) console.error('[data:realisations] getRealisations', error)
   return (data as RealisationWithPhotos[] | null) ?? []
 }
@@ -22,6 +23,7 @@ export async function getAdminRealisations(): Promise<RealisationWithPhotos[]> {
     .from('realisations')
     .select('*, realisation_photos(*)')
     .order('created_at', { ascending: false })
+    .order('position', { ascending: true, referencedTable: 'realisation_photos' })
   if (error) console.error('[data:realisations] getAdminRealisations', error)
   return (data as RealisationWithPhotos[] | null) ?? []
 }

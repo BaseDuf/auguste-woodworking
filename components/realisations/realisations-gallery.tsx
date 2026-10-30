@@ -23,7 +23,15 @@ export default function RealisationsGallery({ realisations }: RealisationsGaller
             <article
               key={realisation.id}
               className="mb-8 flex cursor-pointer break-inside-avoid flex-col gap-3"
-              onClick={() => setSelected(realisation)}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelected({ ...realisation, realisation_photos: sortedPhotos })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setSelected({ ...realisation, realisation_photos: sortedPhotos })
+                }
+              }}
             >
               {coverPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element

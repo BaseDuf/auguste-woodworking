@@ -20,6 +20,14 @@ async function requireAdmin(): Promise<void> {
   }
 }
 
+function storagePathFromUrl(url: string): string | null {
+  try {
+    return new URL(url).pathname.split('/realisation-photos/')[1] ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function createRealisation(formData: FormData): Promise<void> {
   await requireAdmin()
 
@@ -83,14 +91,12 @@ export async function deleteRealisation(
   }
 
   const paths = (photos ?? [])
-    .map((photo) => {
-      const segment = new URL(photo.url).pathname.split('/realisation-photos/')[1]
-      return segment
-    })
+    .map((photo) => storagePathFromUrl(photo.url))
     .filter((p): p is string => Boolean(p))
 
   if (paths.length > 0) {
-    await supabase.storage.from('realisation-photos').remove(paths)
+    const { error: rmError } = await supabase.storage.from('realisation-photos').remove(paths)
+    if (rmError) return { ok: false, error: 'Erreur lors de la suppression des photos' }
   }
 
   const { error: deleteError } = await supabase
@@ -167,9 +173,10 @@ export async function deletePhoto(
     return { ok: false, error: 'Erreur lors de la suppression' }
   }
 
-  const segment = new URL(photo.url).pathname.split('/realisation-photos/')[1]
+  const segment = storagePathFromUrl(photo.url)
   if (segment) {
-    await supabase.storage.from('realisation-photos').remove([segment])
+    const { error: rmError } = await supabase.storage.from('realisation-photos').remove([segment])
+    if (rmError) return { ok: false, error: 'Erreur lors de la suppression de la photo' }
   }
 
   const { error } = await supabase
