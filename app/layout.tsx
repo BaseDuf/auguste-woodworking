@@ -6,6 +6,7 @@ import Footer from '@/components/footer'
 import { CartProvider } from '@/lib/cart/cart-context'
 import { cn } from "@/lib/utils";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/seo/config'
+import { Analytics } from '@vercel/analytics/next'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   )

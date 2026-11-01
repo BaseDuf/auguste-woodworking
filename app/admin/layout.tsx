@@ -28,6 +28,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div>
       <nav className="flex gap-4 p-4 border-b">
+        <Link href="/admin/dashboard" className="text-stone-700 hover:text-stone-900">
+          Dashboard
+        </Link>
         <Link href="/admin/commandes" className="text-stone-700 hover:text-stone-900">
           Commandes
         </Link>
