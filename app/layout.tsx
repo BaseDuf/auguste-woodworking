@@ -5,6 +5,7 @@ import Nav from '@/components/nav'
 import Footer from '@/components/footer'
 import { CartProvider } from '@/lib/cart/cart-context'
 import { cn } from "@/lib/utils";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/seo/config'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -15,8 +16,10 @@ const cormorant = Cormorant_Garamond({
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 export const metadata: Metadata = {
-  title: 'Auguste Woodworking',
-  description: 'Objets en bois faits à la main',
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  openGraph: { siteName: SITE_NAME, locale: 'fr_FR', type: 'website' },
 }
 
 export default function RootLayout({

@@ -1,6 +1,30 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getFeaturedProducts, type ProductWithPhotos } from '@/lib/data/products'
 import { getRealisations, type RealisationWithPhotos } from '@/lib/data/realisations'
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { JsonLd } from '@/components/seo/json-ld'
+
+const homeTitle = 'Auguste Woodworking | Menuisier artisan en Allier'
+const homeDescription = 'Objets en bois faits à la main par un menuisier artisan en Allier.'
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: homeDescription,
+  openGraph: {
+    title: homeTitle,
+    description: homeDescription,
+    url: SITE_URL,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: homeTitle,
+    description: homeDescription,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  alternates: { canonical: SITE_URL },
+}
 
 export default async function Home() {
   const [products, realisations] = await Promise.all([
@@ -13,6 +37,15 @@ export default async function Home() {
 
   return (
     <div>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: SITE_NAME,
+          url: SITE_URL,
+          description: SITE_DESCRIPTION,
+        }}
+      />
       {/* Hero */}
       <section className="flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-stone-200 px-4 py-24 text-center">
         <h1 className="font-serif text-5xl text-stone-800 md:text-6xl">Auguste Woodworking</h1>

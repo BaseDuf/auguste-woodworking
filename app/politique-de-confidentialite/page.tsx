@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Politique de confidentialité' }
+export const metadata: Metadata = {
+  title: 'Politique de confidentialité',
+  robots: { index: false, follow: false },
+}
 
 export default function PolitiqueDeConfidentialitePage() {
   return (

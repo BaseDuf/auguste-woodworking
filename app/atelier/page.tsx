@@ -1,4 +1,27 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+
+const atelierTitle = "L'Atelier | Auguste Woodworking"
+const atelierDescription = "Menuisier de formation, basé dans la vallée de la Sioule en Allier."
+
+export const metadata: Metadata = {
+  title: "L'Atelier",
+  description: atelierDescription,
+  openGraph: {
+    title: atelierTitle,
+    description: atelierDescription,
+    url: `${SITE_URL}/atelier`,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: atelierTitle,
+    description: atelierDescription,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  alternates: { canonical: `${SITE_URL}/atelier` },
+}
 
 const sections = [
   {

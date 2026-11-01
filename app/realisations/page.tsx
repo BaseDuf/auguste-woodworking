@@ -1,5 +1,28 @@
+import type { Metadata } from 'next'
 import { getRealisations } from '@/lib/data/realisations'
 import RealisationsGallery from '@/components/realisations/realisations-gallery'
+import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+
+const realisationsTitle = 'Réalisations | Auguste Woodworking'
+const realisationsDescription = 'Aménagements intérieurs, mobilier sur mesure — nos chantiers réalisés.'
+
+export const metadata: Metadata = {
+  title: 'Réalisations',
+  description: realisationsDescription,
+  openGraph: {
+    title: realisationsTitle,
+    description: realisationsDescription,
+    url: `${SITE_URL}/realisations`,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: realisationsTitle,
+    description: realisationsDescription,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  alternates: { canonical: `${SITE_URL}/realisations` },
+}
 
 export default async function RealisationsPage() {
   const realisations = await getRealisations()

@@ -1,5 +1,28 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getPublishedProducts, type ProductWithPhotos } from '@/lib/data/products'
+import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+
+const boutiqueTitle = 'Boutique | Auguste Woodworking'
+const boutiqueDescription = 'Découvrez nos objets en bois faits à la main.'
+
+export const metadata: Metadata = {
+  title: 'Boutique',
+  description: boutiqueDescription,
+  openGraph: {
+    title: boutiqueTitle,
+    description: boutiqueDescription,
+    url: `${SITE_URL}/boutique`,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: boutiqueTitle,
+    description: boutiqueDescription,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  alternates: { canonical: `${SITE_URL}/boutique` },
+}
 
 type Category = NonNullable<ProductWithPhotos['category']>
 
