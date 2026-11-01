@@ -9,7 +9,7 @@ const homeTitle = 'Auguste Woodworking | Menuisier artisan en Allier'
 const homeDescription = 'Objets en bois faits à la main par un menuisier artisan en Allier.'
 
 export const metadata: Metadata = {
-  title: homeTitle,
+  title: { absolute: homeTitle },
   description: homeDescription,
   openGraph: {
     title: homeTitle,
