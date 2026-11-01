@@ -3,7 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 const mockProduct = vi.hoisted(() => ({
   id: '1', slug: 'table-basse', name: 'Table basse', description: 'Une belle table.',
   price_cents: 45000, shipping_price_cents: 2000,
-  product_photos: [{ id: 'p1', url: 'https://example.com/photo.jpg', position: 0 }],
+  stock: 1, allow_preorder: false, category: null, published: true, created_at: '2024-01-01T00:00:00Z',
+  product_photos: [{ id: 'p1', product_id: '1', url: 'https://example.com/photo.jpg', position: 0 }],
 }))
 
 vi.mock('@/lib/data/products', () => ({
@@ -13,6 +14,7 @@ vi.mock('@/lib/seo/config', () => ({
   SITE_URL: 'https://auguste-woodworking.fr',
   SITE_NAME: 'Auguste Woodworking',
   DEFAULT_OG_IMAGE: 'https://auguste-woodworking.fr/og-default.jpg',
+  BASE_OPEN_GRAPH: { siteName: 'Auguste Woodworking', locale: 'fr_FR', type: 'website' },
 }))
 
 import { generateMetadata } from '../[slug]/page'
@@ -48,6 +50,6 @@ describe('generateMetadata', () => {
     const { getProductBySlug } = await import('@/lib/data/products')
     vi.mocked(getProductBySlug).mockResolvedValueOnce(null)
     const meta = await generateMetadata({ params: { slug: 'introuvable' } })
-    expect(meta.title).toBe('Produit introuvable | Auguste Woodworking')
+    expect((meta.title as { absolute: string }).absolute).toBe('Produit introuvable | Auguste Woodworking')
   })
 })

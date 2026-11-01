@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getRealisations } from '@/lib/data/realisations'
 import RealisationsGallery from '@/components/realisations/realisations-gallery'
-import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { SITE_URL, DEFAULT_OG_IMAGE, BASE_OPEN_GRAPH } from '@/lib/seo/config'
 
 const realisationsTitle = 'Réalisations | Auguste Woodworking'
 const realisationsDescription = 'Aménagements intérieurs, mobilier sur mesure — nos chantiers réalisés.'
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Réalisations',
   description: realisationsDescription,
   openGraph: {
+    ...BASE_OPEN_GRAPH,
     title: realisationsTitle,
     description: realisationsDescription,
     url: `${SITE_URL}/realisations`,

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getFeaturedProducts, type ProductWithPhotos } from '@/lib/data/products'
 import { getRealisations, type RealisationWithPhotos } from '@/lib/data/realisations'
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE, BASE_OPEN_GRAPH } from '@/lib/seo/config'
 import { JsonLd } from '@/components/seo/json-ld'
 
 const homeTitle = 'Auguste Woodworking | Menuisier artisan en Allier'
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: { absolute: homeTitle },
   description: homeDescription,
   openGraph: {
+    ...BASE_OPEN_GRAPH,
     title: homeTitle,
     description: homeDescription,
     url: SITE_URL,

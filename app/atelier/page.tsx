@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { SITE_URL, DEFAULT_OG_IMAGE, BASE_OPEN_GRAPH } from '@/lib/seo/config'
 
 const atelierTitle = "L'Atelier | Auguste Woodworking"
 const atelierDescription = "Menuisier de formation, basé dans la vallée de la Sioule en Allier."
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "L'Atelier",
   description: atelierDescription,
   openGraph: {
+    ...BASE_OPEN_GRAPH,
     title: atelierTitle,
     description: atelierDescription,
     url: `${SITE_URL}/atelier`,

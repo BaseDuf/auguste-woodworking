@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getProductBySlug } from '@/lib/data/products'
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE, BASE_OPEN_GRAPH } from '@/lib/seo/config'
 import { JsonLd } from '@/components/seo/json-ld'
 import PhotoCarousel from '@/components/photo-carousel'
 import AddToCartButton from '@/components/add-to-cart-button'
@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProductBySlug(params.slug)
 
   if (!product) {
-    return { title: `Produit introuvable | ${SITE_NAME}` }
+    return { title: { absolute: `Produit introuvable | ${SITE_NAME}` } }
   }
 
   const description =
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: product.name,
     description,
     openGraph: {
+      ...BASE_OPEN_GRAPH,
       title: `${product.name} | ${SITE_NAME}`,
       description,
       url: `${SITE_URL}/boutique/${product.slug}`,

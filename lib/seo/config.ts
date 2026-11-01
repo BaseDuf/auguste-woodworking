@@ -7,3 +7,9 @@ export const SITE_DESCRIPTION: string =
   'Objets en bois faits à la main par un menuisier artisan en Allier.'
 
 export const DEFAULT_OG_IMAGE: string = `${SITE_URL}/og-default.jpg`
+
+export const BASE_OPEN_GRAPH = {
+  siteName: SITE_NAME,
+  locale: 'fr_FR' as const,
+  type: 'website' as const,
+} satisfies import('next').Metadata['openGraph']

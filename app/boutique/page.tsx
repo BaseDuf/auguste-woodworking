@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedProducts, type ProductWithPhotos } from '@/lib/data/products'
-import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo/config'
+import { SITE_URL, DEFAULT_OG_IMAGE, BASE_OPEN_GRAPH } from '@/lib/seo/config'
 
 const boutiqueTitle = 'Boutique | Auguste Woodworking'
 const boutiqueDescription = 'Découvrez nos objets en bois faits à la main.'
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Boutique',
   description: boutiqueDescription,
   openGraph: {
+    ...BASE_OPEN_GRAPH,
     title: boutiqueTitle,
     description: boutiqueDescription,
     url: `${SITE_URL}/boutique`,
