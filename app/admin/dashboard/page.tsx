@@ -10,8 +10,9 @@ type Granularity = 'day' | 'week' | 'month'
 const VALID_PERIODS = ['7d', '30d', '90d', '12m'] as const
 type Period = typeof VALID_PERIODS[number]
 
-function parsePeriod(p: string | undefined): { from: Date; to: Date; granularity: Granularity } {
-  const period: Period = (VALID_PERIODS as readonly string[]).includes(p ?? '') ? (p as Period) : '30d'
+function parsePeriod(p: string | string[] | undefined): { period: Period; from: Date; to: Date; granularity: Granularity } {
+  const raw = Array.isArray(p) ? p[0] : p
+  const period: Period = (VALID_PERIODS as readonly string[]).includes(raw ?? '') ? (raw as Period) : '30d'
   const to = new Date()
   let from: Date
   let granularity: Granularity
@@ -35,11 +36,11 @@ function parsePeriod(p: string | undefined): { from: Date; to: Date; granularity
       break
   }
 
-  return { from, to, granularity }
+  return { period, from, to, granularity }
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: { period?: string } }) {
-  const { from, to, granularity } = parsePeriod(searchParams.period)
+export default async function DashboardPage({ searchParams }: { searchParams: { period?: string | string[] } }) {
+  const { period, from, to, granularity } = parsePeriod(searchParams.period)
   const [stats, statusCounts, series] = await Promise.all([
     getOrderStats(from, to),
     getOrdersByStatus(),
@@ -49,7 +50,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-semibold text-stone-900">Dashboard</h1>
-      <PeriodSelector currentPeriod={searchParams.period ?? '30d'} />
+      <PeriodSelector currentPeriod={period} />
       <StatsCards stats={stats} />
       <RevenueChart data={series} granularity={granularity} />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

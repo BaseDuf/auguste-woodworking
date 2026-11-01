@@ -50,6 +50,15 @@ export async function getOrderStats(from: Date, to: Date): Promise<OrderStats> {
       .neq('status', 'echouee'),
   ])
 
+  if (currentResult.error) {
+    console.error('[analytics] Error fetching order stats', currentResult.error)
+    throw currentResult.error
+  }
+  if (prevResult.error) {
+    console.error('[analytics] Error fetching prev order stats', prevResult.error)
+    throw prevResult.error
+  }
+
   const currentData = (currentResult.data ?? []) as { total_cents: number }[]
   const prevData = (prevResult.data ?? []) as { total_cents: number }[]
 
@@ -68,7 +77,12 @@ export async function getOrderStats(from: Date, to: Date): Promise<OrderStats> {
 export async function getOrdersByStatus(): Promise<Record<OrderStatus, number>> {
   const supabase = createAdminClient()
 
-  const { data } = await supabase.from('orders').select('status')
+  const { data, error } = await supabase.from('orders').select('status')
+
+  if (error) {
+    console.error('[analytics] Error fetching orders by status', error)
+    throw error
+  }
 
   const rows = (data ?? []) as { status: string }[]
 
@@ -97,12 +111,17 @@ export async function getRevenueTimeSeries(
 ): Promise<RevenuePoint[]> {
   const supabase = createAdminClient()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('orders')
     .select('created_at, total_cents')
     .gte('created_at', from.toISOString())
     .lte('created_at', to.toISOString())
     .neq('status', 'echouee')
+
+  if (error) {
+    console.error('[analytics] Error fetching revenue time series', error)
+    throw error
+  }
 
   const rows = (data ?? []) as { created_at: string; total_cents: number }[]
 
@@ -121,23 +140,37 @@ export async function getRevenueTimeSeries(
     grouped.set(key, (grouped.get(key) ?? 0) + row.total_cents)
   }
 
-  // Generate all periods in range
+  // Generate all periods in range, snapping to bucket boundaries to avoid skips
   const points: RevenuePoint[] = []
-  const cursor = new Date(from)
 
-  while (cursor <= to) {
-    let key: string
-    if (granularity === 'day') {
-      key = cursor.toISOString().substring(0, 10)
+  if (granularity === 'day') {
+    const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()))
+    const toDay = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate()))
+    while (cursor <= toDay) {
+      const key = cursor.toISOString().substring(0, 10)
+      points.push({ date: key, totalCents: grouped.get(key) ?? 0 })
       cursor.setUTCDate(cursor.getUTCDate() + 1)
-    } else if (granularity === 'month') {
-      key = cursor.toISOString().substring(0, 7)
-      cursor.setUTCMonth(cursor.getUTCMonth() + 1)
-    } else {
-      key = isoWeekKey(cursor)
+    }
+  } else if (granularity === 'week') {
+    // Snap to Monday of from's ISO week so we never miss the last week
+    const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()))
+    const dayOfWeek = cursor.getUTCDay() || 7
+    cursor.setUTCDate(cursor.getUTCDate() - (dayOfWeek - 1))
+    const toWeekKey = isoWeekKey(to)
+    while (isoWeekKey(cursor) <= toWeekKey) {
+      const key = isoWeekKey(cursor)
+      points.push({ date: key, totalCents: grouped.get(key) ?? 0 })
       cursor.setUTCDate(cursor.getUTCDate() + 7)
     }
-    points.push({ date: key, totalCents: grouped.get(key) ?? 0 })
+  } else {
+    // Snap to first of from's month to avoid setUTCMonth overflow (e.g. Jan 31 → Mar)
+    const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1))
+    const toKey = to.toISOString().substring(0, 7)
+    while (cursor.toISOString().substring(0, 7) <= toKey) {
+      const key = cursor.toISOString().substring(0, 7)
+      points.push({ date: key, totalCents: grouped.get(key) ?? 0 })
+      cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    }
   }
 
   return points
