@@ -37,12 +37,13 @@ export async function advanceStatus(orderId: string): Promise<{ ok: boolean; err
     return { ok: false, error: 'Commande introuvable' }
   }
 
-  const transitions: Record<string, string> = {
+  type OrderStatus = 'en_attente' | 'confirmee' | 'expediee' | 'livree' | 'echouee'
+  const transitions: Partial<Record<OrderStatus, OrderStatus>> = {
     confirmee: 'expediee',
     expediee: 'livree',
   }
 
-  const next = transitions[current.status]
+  const next = transitions[current.status as OrderStatus]
 
   if (!next) {
     return { ok: false, error: 'Statut invalide' }
