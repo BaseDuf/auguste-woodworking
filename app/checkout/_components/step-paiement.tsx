@@ -71,7 +71,7 @@ function PaymentForm({ onBack }: { onBack: () => void }) {
   )
 }
 
-export function StepPaiement({ clientSecret, onBack, onSuccess: _onSuccess }: Props) {
+export function StepPaiement({ clientSecret, onBack }: Props) {
   return (
     <Elements
       stripe={getStripe()}
